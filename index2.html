@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+
+        <!-- Babylon.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    </head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        }
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+        var createScene = function () {
+    var scene = new BABYLON.Scene(engine);
+
+    // Setup environment
+    var light0 = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 1, 1), scene);
+    var camera = new BABYLON.ArcRotateCamera("ArcRotateCamera", -Math.PI /2, 7 * Math.PI / 16, 20, new BABYLON.Vector3(0, 5, -15), scene);
+    camera.attachControl(canvas, true);
+
+    // Ground
+    var ground = BABYLON.Mesh.CreatePlane("ground", 50.0, scene);
+    ground.position = new BABYLON.Vector3(0, -5, 0);
+    ground.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0);
+
+    ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+    ground.material.backFaceCulling = false;
+    ground.material.diffuseColor = new BABYLON.Color3(0.14, 0.49, 0.26);
+
+    // Create a particle system
+    var particleSystem = new BABYLON.ParticleSystem("particles", 1000, scene);
+
+    //Texture of each particle
+    particleSystem.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
+
+    // Where the particles come from
+    particleSystem.emitter = new BABYLON.Vector3(0,10,0); // the starting position
+
+    // Colors of all particles
+    particleSystem.color1 = new BABYLON.Color4(0, 0.32, 1);
+    particleSystem.color2 = new BABYLON.Color4(0, 0.26, 0.68);
+    particleSystem.colorDead = new BABYLON.Color4(0.53, 0.74, 0.95);
+
+    // Size of each particle (random between...
+    particleSystem.minSize = 0.1;
+    particleSystem.maxSize = 0.75;
+
+    // Life time of each particle (random between...
+    particleSystem.minLifeTime = 0.05;
+    particleSystem.maxLifeTime = 3;
+
+    // Emission rate
+    particleSystem.emitRate = 1000;
+
+    // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
+    particleSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+
+    // Set the gravity of all particles
+    particleSystem.gravity = new BABYLON.Vector3(0, -9.81, 0);
+
+
+    // Angular speed, in radians
+    particleSystem.minAngularSpeed = 10;
+    particleSystem.maxAngularSpeed = 100;
+
+    particleSystem.createCylinderEmitter(1,0,0,0);
+
+    // Speed
+    particleSystem.minEmitPower = 2.5;
+    particleSystem.maxEmitPower = 6;
+    particleSystem.updateSpeed = 0.005;
+
+    // Start the particle system
+    particleSystem.start();
+
+    return scene;
+}
+
+                window.initFunction = async function() {
+                    
+                    
+                    var asyncEngineCreation = async function() {
+                        try {
+                        return createDefaultEngine();
+                        } catch(e) {
+                        console.log("the available createEngine function failed. Creating the default engine instead");
+                        return createDefaultEngine();
+                        }
+                    }
+
+                    window.engine = await asyncEngineCreation();
+        if (!engine) throw 'engine should not be null.';
+        startRenderLoop(engine, canvas);
+        window.scene = createScene();};
+        initFunction().then(() => {sceneToRender = scene                    
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
